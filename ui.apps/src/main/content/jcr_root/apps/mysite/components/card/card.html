@@ -1,0 +1,30 @@
+<!--/*
+    Card Component HTL script.
+    Location: /apps/mysite/components/card/card.html
+*/-->
+<div data-sly-use.card="com.mysite.core.models.CardModel"
+     class="cmp-card cmp-card--${card.cardStyle}">
+
+    <!--/* Placeholder for AEM authoring mode when component is empty */-->
+    <div data-sly-test="${wcmmode.edit && card.empty}" 
+         class="cq-placeholder" 
+         data-emptytext="Card Component - Click here or configure dialog to add content">
+    </div>
+
+    <!--/* Card content rendered when configured */-->
+    <div data-sly-test="${!card.empty}" class="cmp-card__container">
+        <h3 data-sly-test="${card.cardTitle}" class="cmp-card__title">
+            ${card.cardTitle}
+        </h3>
+        
+        <p data-sly-test="${card.description}" class="cmp-card__description">
+            ${card.description}
+        </p>
+
+        <div data-sly-test="${card.ctaText && card.ctaLink}" class="cmp-card__action">
+            <a href="${card.ctaLink}" class="cmp-card__button">
+                ${card.ctaText}
+            </a>
+        </div>
+    </div>
+</div>
