@@ -1,0 +1,161 @@
+/*
+ * Team Members Component Stylesheet
+ * Location: /apps/mysite/clientlibs/clientlib-team-members/css/team-members.css
+ */
+
+.cmp-team-members {
+    display: block;
+    width: 100%;
+    margin: 2rem 0;
+    box-sizing: border-box;
+}
+
+.cmp-team-members *,
+.cmp-team-members *::before,
+.cmp-team-members *::after {
+    box-sizing: inherit;
+}
+
+.cmp-team-members__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.cmp-team-members__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #222;
+}
+
+/* Responsive Grid */
+.cmp-team-members__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+/* Card Styling */
+.cmp-team-members__card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.75rem 1.25rem;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+}
+
+/* Card Hover Effect */
+.cmp-team-members__card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+    border-color: #0070d2;
+}
+
+/* Card Focus State for Keyboard Accessibility */
+.cmp-team-members__card:focus-visible {
+    border-color: #0070d2;
+    box-shadow: 0 0 0 3px rgba(0, 112, 210, 0.35);
+}
+
+/* Card Active (Highlight / Selected) State */
+.cmp-team-members__card.active,
+.cmp-team-members__card.is-active {
+    background-color: #f7faff;
+    border-color: #0070d2;
+    box-shadow: 0 8px 20px rgba(0, 112, 210, 0.2);
+    transform: translateY(-4px) scale(1.02);
+}
+
+.cmp-team-members__card.active::after,
+.cmp-team-members__card.is-active::after {
+    content: "✓";
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 22px;
+    height: 22px;
+    background-color: #0070d2;
+    color: #ffffff;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Circular Photo Container */
+.cmp-team-members__photo-wrapper {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1.25rem;
+    position: relative;
+}
+
+/* Circular Photo */
+.cmp-team-members__photo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f0f0f0;
+    transition: border-color 0.25s ease, transform 0.25s ease;
+    display: block;
+}
+
+.cmp-team-members__card:hover .cmp-team-members__photo,
+.cmp-team-members__card.active .cmp-team-members__photo,
+.cmp-team-members__card.is-active .cmp-team-members__photo {
+    border-color: #0070d2;
+    transform: scale(1.04);
+}
+
+/* Fallback Initial Avatar when no photo */
+.cmp-team-members__photo--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0070d2, #00b4d8);
+    color: #ffffff;
+}
+
+.cmp-team-members__avatar-initial {
+    font-size: 2.25rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Member Information */
+.cmp-team-members__content {
+    margin-top: 0.5rem;
+}
+
+.cmp-team-members__name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1b1b1b;
+    margin: 0 0 0.35rem;
+    line-height: 1.3;
+}
+
+.cmp-team-members__role {
+    font-size: 0.9rem;
+    color: #666666;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.cmp-team-members__card.active .cmp-team-members__name,
+.cmp-team-members__card.is-active .cmp-team-members__name {
+    color: #0056b3;
+}
+

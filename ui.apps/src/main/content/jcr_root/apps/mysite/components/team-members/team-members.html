@@ -1,0 +1,48 @@
+<!--/*
+    Team Members Component HTL script.
+    Location: /apps/mysite/components/team-members/team-members.html
+*/-->
+<sly data-sly-use.clientlib="core/wcm/components/commons/v1/templates/clientlib.html"
+     data-sly-call="${clientlib.all @ categories='mysite.team-members'}"/>
+
+<div data-sly-use.team="com.mysite.core.models.TeamMembers"
+     class="cmp-team-members"
+     data-cmp-is="teamMembers">
+
+    <!--/* Authoring Placeholder when component has no configured members */-->
+    <div data-sly-test="${wcmmode.edit && team.empty}"
+         class="cq-placeholder"
+         data-emptytext="Team Members Component - Click or open dialog to add team members">
+    </div>
+
+    <!--/* Rendered component output */-->
+    <div data-sly-test="${!team.empty}" class="cmp-team-members__container">
+        <h2 data-sly-test="${team.title}" class="cmp-team-members__title">${team.title}</h2>
+
+        <div class="cmp-team-members__grid" data-sly-list.member="${team.members}">
+            <div class="cmp-team-members__card"
+                 tabindex="0"
+                 role="button"
+                 aria-pressed="false"
+                 data-cmp-hook-team-members="card">
+                <div class="cmp-team-members__photo-wrapper">
+                    <img data-sly-test="${member.photo}"
+                         class="cmp-team-members__photo"
+                         src="${member.photo}"
+                         alt="${member.name}"
+                         loading="lazy"/>
+                    <div data-sly-test="${!member.photo}"
+                         class="cmp-team-members__photo cmp-team-members__photo--placeholder"
+                         aria-hidden="true">
+                        <span class="cmp-team-members__avatar-initial">${member.name ? member.name[0] : 'U'}</span>
+                    </div>
+                </div>
+                <div class="cmp-team-members__content">
+                    <h3 data-sly-test="${member.name}" class="cmp-team-members__name">${member.name}</h3>
+                    <p data-sly-test="${member.role}" class="cmp-team-members__role">${member.role}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
