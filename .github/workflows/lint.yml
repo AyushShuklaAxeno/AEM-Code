@@ -1,0 +1,103 @@
+name: Image rules
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  img-rules:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rule: [nosrc, picture, lazy, section]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Check rule "${{ matrix.rule }}"
+        shell: python
+        env:
+          RULE: ${{ matrix.rule }}
+        run: |
+          import os, sys, pathlib
+          from html.parser import HTMLParser
+
+          VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input",
+                  "link", "meta", "param", "source", "track", "wbr"}
+
+          # Skip build output, dependencies, and internal tool folders
+          SKIP = {
+              "node_modules", ".git", "dist", "build", "_site", "vendor",
+              "target", "node", ".cloudmanager"
+          }
+
+          # rule -> (check(attrs, stack), error message)
+          RULES = {
+              "nosrc": (
+                  lambda attrs, stack: "src" not in attrs and "data-src" not in attrs,
+                  "<img src> is not allowed in HTML files",
+              ),
+              "picture": (
+                  lambda attrs, stack: "picture" in stack,
+                  "<img> must be inside a <picture> tag",
+              ),
+              "lazy": (
+                  lambda attrs, stack: (attrs.get("loading") or "").lower() == "lazy",
+                  '<img> must have loading="lazy"',
+              ),
+              "section": (
+                  lambda attrs, stack: "section" in stack,
+                  "<img> must be inside a <section> tag",
+              ),
+          }
+
+          rule = os.environ["RULE"]
+          check, message = RULES[rule]
+
+          class ImgChecker(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=True)
+                  self.stack = []
+                  self.errors = []
+
+              def handle_starttag(self, tag, attrs):
+                  tag_lower = tag.lower()
+                  if tag_lower == "img" and not check(dict(attrs), self.stack):
+                      self.errors.append(self.getpos()[0])
+                  if tag_lower not in VOID:
+                      self.stack.append(tag_lower)
+
+              def handle_endtag(self, tag):
+                  tag_lower = tag.lower()
+                  if tag_lower in VOID:
+                      return
+                  if tag_lower in self.stack:
+                      while self.stack and self.stack.pop() != tag_lower:
+                          pass
+
+          found = 0
+          for path in pathlib.Path(".").rglob("*.html"):
+              if SKIP & set(path.parts):
+                  continue
+              parser = ImgChecker()
+              try:
+                  content = path.read_text(encoding="utf-8", errors="ignore")
+                  parser.feed(content)
+              except Exception as err:
+                  print(f"::warning file={path.as_posix()}::Could not parse file: {err}")
+                  continue
+
+              for line in parser.errors:
+                  print(f"::error file={path.as_posix()},line={line}::{message}")
+                  found += 1
+
+          if found:
+              print(f"\nFound {found} violation(s) of rule '{rule}'.")
+              sys.exit(1)
+          print(f"Rule '{rule}': all good.")
