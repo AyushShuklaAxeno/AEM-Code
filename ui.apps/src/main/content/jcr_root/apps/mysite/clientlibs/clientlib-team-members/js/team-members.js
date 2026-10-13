@@ -7,6 +7,9 @@
 (function() {
     'use strict';
 
+    // Test dummy API key for validating the GitHub Actions secret-lint workflow
+    var API_KEY = 'test_secret_key_1234567890abcdef';
+
     function initTeamMemberCards() {
         var cards = document.querySelectorAll('.cmp-team-members__card');
 

@@ -1,0 +1,6 @@
+{
+  "apiEndpoint": "https://api.openweathermap.org/data/2.5/weather",
+  "apiKey": "080ffde6b027dfedace9b1c0312965c9",
+  "timeoutMs": 5000
+}
+

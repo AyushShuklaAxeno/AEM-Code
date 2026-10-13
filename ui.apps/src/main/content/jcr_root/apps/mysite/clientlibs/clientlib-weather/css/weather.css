@@ -1,0 +1,123 @@
+/* Weather Component Styles (.cmp-weather) */
+.cmp-weather {
+    margin: 1.5rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.cmp-weather__card {
+    max-width: 380px;
+    background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cmp-weather__card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+.cmp-weather__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.cmp-weather__city {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.cmp-weather__country {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
+
+.cmp-weather__status {
+    padding: 1rem 0;
+    text-align: center;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.cmp-weather__status--error {
+    color: #ffb4b4;
+}
+
+.cmp-weather__main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.cmp-weather__temp-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.cmp-weather__temp {
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #ffffff;
+}
+
+.cmp-weather__description {
+    font-size: 1rem;
+    text-transform: capitalize;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 0.25rem;
+}
+
+.cmp-weather__icon-wrapper {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cmp-weather__icon-wrapper img {
+    width: 64px;
+    height: 64px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.cmp-weather__details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+}
+
+.cmp-weather__detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.cmp-weather__detail-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.cmp-weather__detail-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+

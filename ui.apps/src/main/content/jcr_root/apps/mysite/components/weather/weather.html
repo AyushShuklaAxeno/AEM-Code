@@ -1,0 +1,57 @@
+<!--/*
+    City Weather Component HTL script.
+    Location: /apps/mysite/components/weather/weather.html
+*/-->
+<sly data-sly-use.clientlib="core/wcm/components/commons/v1/templates/clientlib.html"
+     data-sly-call="${clientlib.all @ categories='mysite.weather'}"/>
+
+<!--/* Authoring Placeholder for empty state */-->
+<div data-sly-test="${wcmmode.edit && !properties.city}"
+     class="cq-placeholder"
+     data-emptytext="City Weather - Click to open dialog and configure a city">
+</div>
+
+<!--/* Rendered Weather Widget */-->
+<section data-sly-test="${properties.city}"
+         class="cmp-weather"
+         data-city="${properties.city}"
+         data-units="${properties.units || 'metric'}"
+         data-show-details="${properties.showDetails}">
+
+    <div class="cmp-weather__card">
+        <header class="cmp-weather__header">
+            <h3 class="cmp-weather__city">${properties.city}</h3>
+            <span class="cmp-weather__country"></span>
+        </header>
+
+        <div class="cmp-weather__status">
+            Loading weather data...
+        </div>
+
+        <div class="cmp-weather__main" style="display: none;">
+            <div class="cmp-weather__temp-group">
+                <span class="cmp-weather__temp">--</span>
+                <span class="cmp-weather__description">--</span>
+            </div>
+            <div class="cmp-weather__icon-wrapper"></div>
+        </div>
+
+        <div data-sly-test="${properties.showDetails}"
+             class="cmp-weather__details"
+             style="display: none;">
+            <div class="cmp-weather__detail-item">
+                <span class="cmp-weather__detail-label">Feels Like</span>
+                <span class="cmp-weather__detail-value cmp-weather__feels-like">--</span>
+            </div>
+            <div class="cmp-weather__detail-item">
+                <span class="cmp-weather__detail-label">Humidity</span>
+                <span class="cmp-weather__detail-value cmp-weather__humidity">--</span>
+            </div>
+            <div class="cmp-weather__detail-item">
+                <span class="cmp-weather__detail-label">Wind</span>
+                <span class="cmp-weather__detail-value cmp-weather__wind">--</span>
+            </div>
+        </div>
+    </div>
+</section>
+
