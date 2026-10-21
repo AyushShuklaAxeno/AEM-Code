@@ -1,0 +1,188 @@
+name: AEM Architecture, Quality & Link Rules
+
+on:
+  push:
+    branches: [ main, develop, feature/CI_workflows, feature/test-GithubActions, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop, feature/CI_workflows, feature/test-GithubActions, 'feature/**' ]
+
+jobs:
+  # =========================================================================
+  # JOB 1: Link Checker Rules (HTL Link Governance Matrix)
+  # =========================================================================
+  link-checker-rules:
+    name: ${{ matrix.rule.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Run all rules even if one fails
+      matrix:
+        rule:
+          # RULE 1: No hardcoded /content paths in HTL attributes
+          - name: "HTL - No hardcoded /content links"
+            path: ui.apps/src/main/content/jcr_root
+            include: "*.html"
+            pattern: '\b(href|action|data-(cta-link|pdp-link|test-drive-link|brochure-path))=["'']/content/[^"'']*'
+            exclude: '/content/dam/'
+            message: "Hardcoded /content path detected in HTL. Authored paths must pass through LinkCheckerModel."
+
+          # RULE 2: Link attributes must output a LinkChecker validated URL (.url), not a raw authored property
+          - name: "HTL - Link attributes must use LinkCheckerModel (.url)"
+            path: ui.apps/src/main/content/jcr_root
+            include: "*.html"
+            pattern: '\b(href|data-(cta-link|pdp-link|test-drive-link|brochure-path))="\$\{[^}]*\}"'
+            # Exclude valid link models, SVGs, metadata, and template variables
+            exclude: '(\.url|\.URL|sprite\.svg|clientlib|favicon|canonicalUrl|preconnect|preload|dnsPrefetch|context=[''"]uri[''"]|href="\$\{href)'
+            message: "Link attribute outputs a raw un-checked value. Use LinkCheckerModel and output ${model.url}."
+
+          # RULE 3: Every LinkCheckerModel declaration in data-sly-use must pass '@ url=...'
+          - name: "HTL - LinkCheckerModel must receive @ url=..."
+            path: ui.apps/src/main/content/jcr_root
+            include: "*.html"
+            pattern: 'LinkCheckerModel.*'
+            exclude: '@[[:space:]]*url='
+            message: "LinkCheckerModel declared without '@ url=...'. Without this parameter, getUrl() returns empty."
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: "Execute Rule Check"
+        env:
+          RULE_PATH: ${{ matrix.rule.path }}
+          RULE_INCLUDE: ${{ matrix.rule.include }}
+          RULE_PATTERN: ${{ matrix.rule.pattern }}
+          RULE_EXCLUDE: ${{ matrix.rule.exclude }}
+          RULE_MESSAGE: ${{ matrix.rule.message }}
+        run: |
+          echo "Scanning for pattern: $RULE_PATTERN in $RULE_PATH"
+          matches=$(grep -rnoE --include="$RULE_INCLUDE" "$RULE_PATTERN" "$RULE_PATH" || true)
+
+          if [ -n "$RULE_EXCLUDE" ] && [ -n "$matches" ]; then
+            matches=$(echo "$matches" | grep -vE "$RULE_EXCLUDE" || true)
+          fi
+
+          if [ -n "$matches" ]; then
+            echo "❌ Violations found:"
+            echo "$matches"
+            echo "::error::$RULE_MESSAGE"
+            exit 1
+          fi
+
+          echo "✅ Rule passed: No violations found."
+
+  # =========================================================================
+  # JOB 2: AEM Architecture & Quality Checks (Servlets, Exceptions, Media, Placeholders)
+  # =========================================================================
+  architecture-quality-checks:
+    name: "AEM Architecture & Quality Checks"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # -------------------------------------------------------------
+      # CHECK 1: Servlet Registration Check (Resource-Based preferred)
+      # -------------------------------------------------------------
+      - name: "Check 1: Scan for Path-Based Servlets (Warning)"
+        run: |
+          echo "Scanning codebase for Path-Based servlets..."
+          matches=$(grep -rnE 'core/src/main/java' -e '(sling\.servlet\.paths|SLING_SERVLET_PATHS)' || true)
+          if [ -n "$matches" ]; then
+            echo "------------------------------------------------------------------"
+            echo "⚠️ WARNING: Path-Based servlet detected! Resource-Based is preferred."
+            echo "$matches"
+            echo "------------------------------------------------------------------"
+            echo "::warning::Path-Based servlets detected. Prefer resource-based servlets with SlingServletResourceTypes."
+          else
+            echo "✅ Check 1 Passed: No path-based servlets found."
+          fi
+
+      # -------------------------------------------------------------
+      # CHECK 2: Exception Handling Check (No broad/runtime catches - Fail)
+      # -------------------------------------------------------------
+      - name: "Check 2: Scan for Broad/Runtime Exception Catches (Fail)"
+        run: |
+          echo "Scanning Java files for broad/runtime exception catches..."
+          matches=$(grep -rnE 'core/src/main/java' -e 'catch\s*\(\s*(Exception|RuntimeException|Throwable)\b' || true)
+          if [ -n "$matches" ]; then
+            echo "------------------------------------------------------------------"
+            echo "❌ BUILD FAILED: Improper broad exception handling detected!"
+            echo "$matches"
+            echo "Avoid catching generic Exception/RuntimeException/Throwable. Handle specific checked exceptions or use defensive checks."
+            echo "------------------------------------------------------------------"
+            echo "::error::Broad exception handling detected (catch Exception/RuntimeException/Throwable). Use defensive coding or catch specific exceptions."
+            exit 1
+          else
+            echo "✅ Check 2 Passed: Exception handling looks clean."
+          fi
+
+      # -------------------------------------------------------------
+      # CHECK 3: Component Placeholder & Authoring Visibility Check (Fail if missing)
+      # -------------------------------------------------------------
+      - name: "Check 3: Verify Placeholders Disappear When Authored (Fail)"
+        if: always()
+        run: |
+          echo "Scanning components for placeholder & dynamic visibility handling..."
+
+          # 1. Ensure placeholder mechanism exists across components
+          FOUND_PLACEHOLDER=$(grep -rnE 'ui.apps/src/main/content/jcr_root/apps' -e '(cq-placeholder|templates\.placeholder)' || true)
+          if [ -z "$FOUND_PLACEHOLDER" ]; then
+            echo "------------------------------------------------------------------"
+            echo "❌ BUILD FAILED: Missing component placeholder implementation!"
+            echo "Every AEM component must handle empty state / placeholder for Author UX."
+            echo "------------------------------------------------------------------"
+            echo "::error::Missing component placeholder implementation in HTL templates."
+            exit 1
+          fi
+
+          # 2. Ensure all templates.placeholder calls bind '@ isEmpty=' or '@ hasContent='
+          # so that when the component is authored with fields, the placeholder disappears
+          UNBOUND_TEMPLATES=$(grep -rnE 'templates\.placeholder' ui.apps/src/main/content/jcr_root/apps | grep -vE '(isEmpty|hasContent)' || true)
+          if [ -n "$UNBOUND_TEMPLATES" ]; then
+            echo "------------------------------------------------------------------"
+            echo "❌ BUILD FAILED: templates.placeholder called without empty/content condition!"
+            echo "Placeholders must dynamically disappear when the component is authored."
+            echo "$UNBOUND_TEMPLATES"
+            echo "------------------------------------------------------------------"
+            echo "::error::templates.placeholder must pass '@ isEmpty' or '@ hasContent' so the placeholder overlay disappears when authored."
+            exit 1
+          fi
+
+          echo "✅ Check 3 Passed: Placeholders properly configured to display on empty state and disappear when authored."
+
+      # -------------------------------------------------------------
+      # CHECK 4A: HTL - Images/Videos must use DMAssetPathModel / Renditions
+      # -------------------------------------------------------------
+      - name: "Check 4A: HTL - Images/Videos must not use raw properties (Fail)"
+        if: always()
+        run: |
+          echo "Scanning HTL for raw DAM property rendering..."
+          # Flags both quoted "${properties.image}" and unquoted parameter passing "desktopSrc=properties.image"
+          matches=$(grep -rnoE --include="*.html" '(src|desktopSrc|mobileSrc|posterSrc|videoSrc[0-9]*)=["'']?\$?\{?(properties|[a-zA-Z]+)\.(desktopImage|mobileImage|desktopVideo|mobileVideo|desktopThumbnail|mobileThumbnail|fileReference)' ui.apps/src/main/content/jcr_root || true)
+
+          if [ -n "$matches" ]; then
+            echo "❌ Violations found: Raw image/video rendered without Dynamic Media / Renditions:"
+            echo "$matches"
+            echo "::error::Images/Videos must be resolved via DMAssetPathModel before rendering."
+            exit 1
+          fi
+          echo "✅ Check 4A Passed: All media properties pass through proper handlers."
+
+      # -------------------------------------------------------------
+      # CHECK 4B: HTL - Videos must include Dynamic Media encodes
+      # -------------------------------------------------------------
+      - name: "Check 4B: HTL - Videos must include DM encodes (Fail)"
+        if: always()
+        run: |
+          echo "Scanning video components for encode handling..."
+          # Flags videos passed directly to media player without appending Dynamic Media encode
+          matches=$(grep -rnoE --include="*.html" 'videoSrc[0-9]*=dm[A-Za-z0-9]+\.dmPath[,\s]' ui.apps/src/main/content/jcr_root || true)
+
+          if [ -n "$matches" ]; then
+            echo "❌ Violations found: Videos passed to player without encode formatting:"
+            echo "$matches"
+            echo "::error::Videos must append Dynamic Media encodes: (dmVideo.isProcessed ? desktopEncode : '')."
+            exit 1
+          fi
+          echo "✅ Check 4B Passed: All video components include encode handling."
+          echo "🎉 All AEM Architecture & Quality Checks Completed Successfully!"

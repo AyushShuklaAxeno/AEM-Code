@@ -1,0 +1,25 @@
+<!--/*
+    CI Test Component - Purely for testing and verifying rules-check.yml failure scenarios.
+    Does not affect application runtime (componentGroup is .hidden).
+*/-->
+<div class="cmp-rule-test">
+
+    <!-- Fails Rule 1.1: No hardcoded /content links -->
+    <a href="/content/mysite/us/en/test-page.html">Failing Link 1.1 - Hardcoded /content Path</a>
+
+    <!-- Fails Rule 1.2: Link attributes must use valid URL (.url) -->
+    <a href="${properties.rawTargetLink}">Failing Link 1.2 - Raw Unvalidated Property</a>
+
+    <!-- Fails Rule 1.3: Link-Checker Model declaration must receive @ url=... -->
+    <sly data-sly-use.checker="com.mysite.core.models.LinkCheckerModel"></sly>
+
+    <!-- Fails Check 3: templates.placeholder called without '@ isEmpty=' or '@ hasContent=' -->
+    <sly data-sly-call="${templates.placeholder}"></sly>
+
+    <!-- Fails Check 4A: Raw image/video property rendered without DMAssetPathModel -->
+    <div desktopSrc="${properties.desktopImage}"></div>
+
+    <!-- Fails Check 4B: Video passed directly without Dynamic Media encode handling -->
+    <sly data-sly-call="${videoTemplate @ videoSrc1=dmVideo.dmPath, autoplay=false}"></sly>
+
+</div>
